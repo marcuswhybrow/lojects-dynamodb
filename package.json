@@ -30,7 +30,7 @@
   "dependencies": {
     "aws-sdk": "^2.6.9",
     "dynamodb-data-types": "^3.0.0",
-    "lojects": "^0.2.3"
+    "lojects": "^0.2.4"
   },
   "devDependencies": {
     "babel": "^6.5.2",
