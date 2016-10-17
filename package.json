@@ -1,0 +1,41 @@
+{
+  "name": "lojects-dynamodb",
+  "version": "0.1.0",
+  "description": "DynamoDB integration for lojects",
+  "author": "Marcus Whybrow",
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "homepage": "https://github.com/marcuswhybrow/lojects-dynamodb",
+  "bugs": {
+    "url": "https://github.com/marcuswhybrow/lojects-dynamodb/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marcuswhybrow/lojects-dynamodb"
+  },
+  "scripts": {
+    "prepublish": "babel src --out-dir lib",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "jshintConfig": {
+    "node": true,
+    "esversion": 6
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-0"
+    ]
+  },
+  "dependencies": {
+    "aws-sdk": "^2.6.9",
+    "dynamodb-data-types": "^3.0.0"
+  },
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.16.0",
+    "babel-core": "^6.17.0",
+    "babel-preset-es2015": "^6.16.0",
+    "babel-preset-stage-0": "^6.16.0"
+  }
+}
