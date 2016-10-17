@@ -10,22 +10,37 @@ export default new Integration({
   defaultContext: { idAttrName: 'id' },
   actions: {
     create: (data, context) => {
+      const id = data[context.idAttrName];
+      console.info(`${context.manager.name}: CREATE ${id} in ${context.tableName}`);
       return dynamodb.putItem({
         Item: attr.wrap(data),
         TableName: context.tableName,
         ConditionExpression: `attribute_not_exists (${context.idAttrName})`
-      }).promise().then(() => data)
+      }).promise()
+        .then(() => {
+          console.info(`${context.manager.name}: CREATE successfull`);
+          return data;
+        })
+        .catch(err => {
+          console.error(err);
+          return Promise.reject(err.message);
+        });
     },
 
     get: (data, context) => {
       let key = {};
-      key[context.idAttrName] = data[context.idAttrName];
+      const id = data[context.idAttrName];
+      key[context.idAttrName] = id;
+      console.info(`${context.manager.name}: GET ${id} from ${context.tableName}`)
       return dynamodb.getItem({
         Key: attr.wrap(key),
         TableName: context.tableName
       }).promise().then(data => {
-        if (!data.hasOwnProperty('Item'))
+        if (!data.hasOwnProperty('Item')) {
+          console.error("Item not found");
           return Promise.reject("Item not found");
+        }
+        console.info(`${context.manager.name}: GET successfull`);
         return attr.unwrap(data.Item)
       });
     },
@@ -33,7 +48,8 @@ export default new Integration({
     update: (data, context) => {
       // Extract id from data to use as the update key
       let key = {};
-      key[context.idAttrName] = attr.wrap(data[context.idAttrName]);
+      const id = data[context.idAttrName];
+      key[context.idAttrName] = attr.wrap(id);
       delete data[context.idAttrName];
 
       // build update expression & attribute values
@@ -51,14 +67,18 @@ export default new Integration({
       }
 
       // call dynamodb
-      return dynamodb.getItem({
+      console.info(`${context.manager.name}: UPDATE ${id} in ${context.tableName}`);
+      return dynamodb.updateItem({
         Key: attr.wrap(key),
         UpdateExpression: updateExpression,
         ExpressionAttributeValues: attrValues,
         TableName: context.tableName,
         ReturnValues: 'ALL_NEW',
         ConditionExpression: `attribute_exists (${context.idAttrName})`
-      }).promise().then(data => attr.unwrap(data.Item));
+      }).promise().then(data => {
+        console.info(`${context.manager.name}: UPDATE successfull`);
+        return attr.unwrap(data.Item);
+      });
     }
   },
 });
