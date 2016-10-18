@@ -46,39 +46,66 @@ export default new Integration({
     },
 
     update: (data, context) => {
-      // Extract id from data to use as the update key
-      let key = {};
       const id = data[context.idAttrName];
-      key[context.idAttrName] = attr.wrap(id);
-      delete data[context.idAttrName];
-
-      // build update expression & attribute values
-      let updateExpression = '';
+      let key = {};
+      let updateExpression = 'SET';
+      let attrNames = {};
       let attrValues = {};
-      Object.keys(flatten(data)).forEach((nestedAttrName, index) => {
-        updateExpression += `SET ${nestedAttrName} = :val${index}, `;
-        attrValues[`:val${index}`] = attr.wrap(data[nestedAttrName]);
-      });
 
-      // Remove trailing comma
-      const expLen = updateExpression.length;
-      if (expLen >= 2) {
-        updateExpression = updateExpression.substring(0, expLen - 2);
-      }
+      const extractKey = () => {
+        key[context.idAttrName] = id;
+        delete data[context.idAttrName];
+        return Promise.resolve(key);
+      };
+      const buildUpdateExpression = () => {
+        const flatData = flatten(data);
+        const buildAttrNames = (nestedAttrName) => {
+          nestedAttrName.split('.').forEach(attrName => {
+            attrNames[`#${attrName}`] = attrName;
+          });
+        };
+        const buildAttrValues = (nestedAttrName, index) => {
+          const attrName = '#' + nestedAttrName.replace(/\./g, '.#');
+          console.log('attrName', attrName);
+          updateExpression += ` ${attrName} = :val${index}, `;
+          attrValues[`:val${index}`] = flatData[nestedAttrName];
+        };
+        const removeTrailingComma = () => {
+          let expLen = updateExpression.length;
+          if (expLen >= 2) {
+            updateExpression = updateExpression.substring(0, expLen - 2);
+          }
+        };
 
-      // call dynamodb
-      console.info(`${context.manager.name}: UPDATE ${id} in ${context.tableName}`);
-      return dynamodb.updateItem({
-        Key: attr.wrap(key),
-        UpdateExpression: updateExpression,
-        ExpressionAttributeValues: attrValues,
-        TableName: context.tableName,
-        ReturnValues: 'ALL_NEW',
-        ConditionExpression: `attribute_exists (${context.idAttrName})`
-      }).promise().then(data => {
-        console.info(`${context.manager.name}: UPDATE successfull`);
-        return attr.unwrap(data.Item);
-      });
+        Object.keys(flatData).forEach((nestedAttrName, index) => {
+          buildAttrNames(nestedAttrName);
+          buildAttrValues(nestedAttrName, index);
+        });
+        removeTrailingComma();
+      };
+      const callIntegration = () => {
+        console.log(updateExpression);
+        console.info(`${context.manager.name}: UPDATE ${id} in ${context.tableName}`);
+        return dynamodb.updateItem({
+          Key: attr.wrap(key),
+          UpdateExpression: updateExpression,
+          ExpressionAttributeNames: attrNames,
+          ExpressionAttributeValues: attr.wrap(attrValues),
+          TableName: context.tableName,
+          ReturnValues: 'ALL_NEW',
+          ConditionExpression: `attribute_exists (${context.idAttrName})`
+        }).promise().then(data => {
+          console.info(`${context.manager.name}: UPDATE successfull`);
+          return attr.unwrap(data.Attributes);
+        }).catch(error => {
+          console.error(error);
+          return Promise.reject(error.message);
+        });
+      };
+
+      return extractKey()
+        .then(buildUpdateExpression)
+        .then(callIntegration);
     }
   },
 });
