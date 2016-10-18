@@ -15,7 +15,7 @@ function _flatten(obj, prefix) {
   }, {});
 }
 
-function flatten(obj) {
+export function flatten(obj) {
   let results = _flatten(obj, '');
   Object.keys(results).forEach(key => {
     results[key.substring(1)] = results[key];
