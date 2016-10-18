@@ -1,3 +1,7 @@
+function isObject(val) {
+  return (typeof val === 'object' && !Array.isArray(val)) ? val !== null : false;
+}
+
 function _flatten(obj, prefix) {
   return Object.keys(obj).map(key => {
     const val = obj[key];
