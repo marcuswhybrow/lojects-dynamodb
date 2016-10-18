@@ -1,6 +1,6 @@
 {
   "name": "lojects-dynamodb",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "DynamoDB integration for lojects",
   "author": "Marcus Whybrow",
   "license": "MIT",
