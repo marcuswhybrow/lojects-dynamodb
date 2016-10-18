@@ -66,7 +66,6 @@ export default new Integration({
         };
         const buildAttrValues = (nestedAttrName, index) => {
           const attrName = '#' + nestedAttrName.replace(/\./g, '.#');
-          console.log('attrName', attrName);
           updateExpression += ` ${attrName} = :val${index}, `;
           attrValues[`:val${index}`] = flatData[nestedAttrName];
         };
@@ -84,7 +83,6 @@ export default new Integration({
         removeTrailingComma();
       };
       const callIntegration = () => {
-        console.log(updateExpression);
         console.info(`${context.manager.name}: UPDATE ${id} in ${context.tableName}`);
         return dynamodb.updateItem({
           Key: attr.wrap(key),
